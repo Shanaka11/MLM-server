@@ -9,7 +9,6 @@ verify_ssl = true
 django = "*"
 djangorestframework = "*"
 django-cors-headers = "*"
-mysqlclient = "*"
 djangorestframework-simplejwt = "*"
 
 [requires]
