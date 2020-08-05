@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.contrib.auth.models import User
 from .serializers import UserSerializer
@@ -30,3 +31,16 @@ class TokenRefreshViewNew(TokenRefreshView):
 def getUser(request):
     serializer = UserSerializer(request.user)
     return Response(data=serializer.data, status=200)
+
+class CreateUserView(APIView):
+
+    def post(self, request):
+        print(request.data)
+        user = request.data
+        serializer = UserSerializer(data = user)
+        if serializer.is_valid():
+            saved_user = serializer.save()
+            # Then Create the userprofile and the salesperson
+        else:
+            return Response({'response': 'error', 'message': serializer.errors})
+        return Response({'response': 'success'}, status=201)
