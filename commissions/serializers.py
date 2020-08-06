@@ -12,7 +12,9 @@ class SalespersonSeralizer(serializers.ModelSerializer):
     # Total group sales 
     # total_group_sales = serializers.SerializerMethodField(read_only = true)
     total_individual_sales = serializers.SerializerMethodField(read_only = True)
-
+    # individual_commission
+    # group_commission
+    
     class Meta:
         model = Salesperson
         fields = '__all__'
