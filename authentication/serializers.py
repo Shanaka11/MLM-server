@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Role, UserProfile
-from commissions.serializers import SalespersonSeralizer
+from commissions.serializers import SalespersonSeralizer, Salesperson
+from rest_framework.response import Response
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,10 +52,17 @@ class UserSerializer(serializers.ModelSerializer):
 
 class PublicUserSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField(read_only = True)
+    salesperson = serializers.SerializerMethodField(read_only = True)
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'first_name', 'email', 'role')
+        fields = ('id', 'username', 'first_name', 'email', 'role', 'salesperson')
     
     def get_role(self, obj):
         return obj.userprofile.role.role
+
+    def get_salesperson(self, obj):
+        try:
+            return obj.salesperson.id
+        except:    
+            return ""
