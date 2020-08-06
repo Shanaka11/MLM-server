@@ -29,7 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'password', 'first_name', 'email')
-        # fields = '__all__'
+
     
     def create(self, validated_data):
         user = User.objects.create(
