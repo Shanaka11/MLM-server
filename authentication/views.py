@@ -3,8 +3,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.contrib.auth.models import User
-from .serializers import UserSerializer
+from .serializers import UserSerializer, UserProfileSerializer
 from rest_framework.decorators import api_view
+
+from .models import Role
+from commissions.serializers import SalespersonSeralizer
 
 max_age = 365 * 24 * 60 * 60
 
@@ -36,10 +39,23 @@ class CreateUserView(APIView):
 
     def post(self, request):
         user = request.data
-        serializer = UserSerializer(data = user)
-        if serializer.is_valid():
-            saved_user = serializer.save()
-            # Then Create the userprofile and the salesperson
+        serializer_user = UserSerializer(data = user)
+        # IF CLIENT the fetch client Role object and assign it 
+        # Assume its client for now
+        serializer_salesperson = SalespersonSeralizer(data = user)
+    
+        if serializer_user.is_valid() and serializer_salesperson.is_valid():
+            serializer_user.save()
+            # Then Create the userprofile and the salesperson       
+            serializer_salesperson.save()
+
         else:
-            return Response({'response': 'error', 'message': serializer.errors})
+            return Response({'response': 'error', 'message': serializer_user.errors})
         return Response({'response': 'success'}, status=201)
+    
+    # def get(self, request):
+    #     users = User.objects.all()
+    #     serializer = UserSerializer(users, many=True)
+    #     # if serializer.is_valid():
+    #     return Response(serializer.data, status=200)    
+    #     # return Response(serializer.errors, status=400)

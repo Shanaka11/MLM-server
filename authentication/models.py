@@ -6,5 +6,5 @@ class Role(models.Model):
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, blank=False, null=False)
-    role = models.OneToOneField(Role, on_delete=models.CASCADE, blank=False, null=False)
+    user = models.OneToOneField(User, unique=True, on_delete=models.CASCADE, blank=False, null=False)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, blank=False, null=False)
