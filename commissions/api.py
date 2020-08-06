@@ -19,7 +19,7 @@ class SalespersonApi(viewsets.ModelViewSet):
         user.set_password("MiguelIsGood")
         user.save()
         # Create user profile
-        role = Role.objects.get(role = "ADMIN")
+        role = Role.objects.get(role = "CLIENT")
         user_profile = UserProfile.objects.create(
             user = user,
             role = role

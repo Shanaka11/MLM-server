@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.contrib.auth.models import User
-from .serializers import UserSerializer, UserProfileSerializer
+from .serializers import UserSerializer, UserProfileSerializer, PublicUserSerializer
 from rest_framework.decorators import api_view
 
 from .models import Role
@@ -32,7 +32,7 @@ class TokenRefreshViewNew(TokenRefreshView):
 
 @api_view(('GET',))
 def getUser(request):
-    serializer = UserSerializer(request.user)
+    serializer = PublicUserSerializer(request.user)
     return Response(data=serializer.data, status=200)
 
 class CreateUserView(APIView):

@@ -48,3 +48,13 @@ class UserSerializer(serializers.ModelSerializer):
         profile.save()        
         # Create Salesperson if Client
         return user        
+
+class PublicUserSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField(read_only = True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'first_name', 'email', 'role')
+    
+    def get_role(self, obj):
+        return obj.userprofile.role.role
