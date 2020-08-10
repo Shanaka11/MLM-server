@@ -12,6 +12,7 @@ class SalespersonSeralizer(serializers.ModelSerializer):
     # Total group sales 
     # total_group_sales = serializers.SerializerMethodField(read_only = true)
     total_individual_sales = serializers.SerializerMethodField(read_only = True)
+    get_total_individual_commission = serializers.SerializerMethodField(read_only = True)
     # individual_commission
     # group_commission
     
@@ -30,3 +31,14 @@ class SalespersonSeralizer(serializers.ModelSerializer):
         # serializer = SalesSerializer(sales, many=True)
         # return serializer.data
         return total['total__sum']
+
+    def get_total_individual_commission (self, obj):
+        sales = Sales.objects.filter(salesperson_id=obj.id)
+        total = sales.aggregate(Sum('commission_perc'))
+        if total['commission_perc__sum'] is None:
+            total['commission_perc__sum'] = 0
+        return total['commission_perc__sum']
+
+    # def get_total_group_sales (self, obj):
+
+    # def get_total_group_commission(self, obj)

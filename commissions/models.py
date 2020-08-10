@@ -14,12 +14,11 @@ class Salesperson(models.Model):
     # What is qualification - commission percentage 
     qualification = models.FloatField(blank=True, null=True)
     # Total commissions
-    total_commission = models.FloatField(blank=True, null=True)
+    # total_commission = models.FloatField(blank=True, null=True)
     # Total group commissions
-    total_group_commissions = models.FloatField(blank=True, null=True)
+    total_group_sales = models.FloatField(blank=True, null=True, default=0)
+    total_group_commissions = models.FloatField(blank=True, null=True, default=0)
     # Have seriaizer method fields to fetch these values commissions as well
-    # Total individual sales
-    # Total group sales 
 
 class Sales(models.Model):
     salesperson = models.ForeignKey(Salesperson, on_delete=models.CASCADE, blank=False, null=False)
