@@ -1,12 +1,18 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
-from .serializers import SalespersonSeralizer, SalesSerializer
+from .serializers import SalespersonSeralizer, SalesSerializer, SalespersonDetailSerializer
 from .models import Sales, Salesperson
 from authentication.serializers import  User, UserProfile, Role
 
 class SalespersonApi(viewsets.ModelViewSet):
     queryset = Salesperson.objects.all()
     serializer_class = SalespersonSeralizer    
+
+    def retrieve(self, request, pk):
+        response = super().retrieve(request, pk)
+        sponser = Salesperson.objects.get(id=response.data["sponser"])
+        response.data["sponser"] = SalespersonSeralizer(sponser).data
+        return response
 
     def create(self, request):
         # When Creating Salesperson create a user as well if password is not given set a default password

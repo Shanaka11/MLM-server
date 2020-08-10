@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from .serializers import UserSerializer, UserProfileSerializer, PublicUserSerializer
 from rest_framework.decorators import api_view
 
-from .models import Role
+from .models import Role, UserProfile
 from commissions.serializers import SalespersonSeralizer
 
 max_age = 365 * 24 * 60 * 60
@@ -61,3 +61,23 @@ class CreateUserView(APIView):
     #     # if serializer.is_valid():
     #     return Response(serializer.data, status=200)    
     #     # return Response(serializer.errors, status=400)
+
+@api_view(('POST',))
+def CreateAdmin(request):
+        user = User.objects.create(
+            username=request.data['username'],
+            first_name=request.data['first_name'],
+            email=request.data["email"]
+        )
+        user.set_password(request.data["password"])
+        user.save()
+        # Create User Profile
+        role = Role.objects.get(role ='ADMIN')
+        profile = UserProfile.objects.create(
+            user = user,
+            role = role
+        )        
+        profile.save()  
+
+        return Response({"response": "Admin Created"}, status=201)
+        

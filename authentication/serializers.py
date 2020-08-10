@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Role, UserProfile
-from commissions.serializers import SalespersonSeralizer, Salesperson
+# from commissions.serializers import SalespersonSeralizer, Salesperson
 from rest_framework.response import Response
 
 class RoleSerializer(serializers.ModelSerializer):

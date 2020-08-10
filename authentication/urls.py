@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import TokenObtainPairViewNew, getUser, TokenRefreshViewNew, CreateUserView
+from .views import TokenObtainPairViewNew, getUser, TokenRefreshViewNew, CreateUserView, CreateAdmin
 from rest_framework.routers import DefaultRouter
 from .api import RoleApi, UserProfileApi
 
@@ -9,6 +9,7 @@ router.register('profile', UserProfileApi)
 
 urlpatterns = [
     path('user', getUser),
+    path('create/admin', CreateAdmin),
     path('create', CreateUserView.as_view()),
     path('token', TokenObtainPairViewNew.as_view()),
     path('refresh', TokenRefreshViewNew.as_view()),
