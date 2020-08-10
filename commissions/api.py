@@ -9,7 +9,6 @@ class SalespersonApi(viewsets.ModelViewSet):
     serializer_class = SalespersonSeralizer    
 
     def create(self, request):
-        response = super().create(request)
         # When Creating Salesperson create a user as well if password is not given set a default password
         user = User.objects.create(
             username=request.data["name"],
@@ -18,6 +17,9 @@ class SalespersonApi(viewsets.ModelViewSet):
         )
         user.set_password("MiguelIsGood")
         user.save()
+        request.data['user'] = user.id
+        # Create Salesperson
+        response = super().create(request)
         # Create user profile
         role = Role.objects.get(role = "CLIENT")
         user_profile = UserProfile.objects.create(
@@ -25,6 +27,7 @@ class SalespersonApi(viewsets.ModelViewSet):
             role = role
         )
         return response
+
 class SalesApi(viewsets.ModelViewSet):
     queryset= Sales.objects.all()
     serializer_class = SalesSerializer

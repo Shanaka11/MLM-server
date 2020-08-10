@@ -40,14 +40,16 @@ class CreateUserView(APIView):
     def post(self, request):
         user = request.data
         serializer_user = UserSerializer(data = user)
-        # IF CLIENT the fetch client Role object and assign it 
-        # Assume its client for now
-        serializer_salesperson = SalespersonSeralizer(data = user)
-    
-        if serializer_user.is_valid() and serializer_salesperson.is_valid():
+
+        if serializer_user.is_valid():
             serializer_user.save()
-            # Then Create the userprofile and the salesperson       
-            serializer_salesperson.save()
+            # IF CLIENT the fetch client Role object and assign it 
+            # Assume its client for now
+            user['user'] = serializer_user.data['id']
+            serializer_salesperson = SalespersonSeralizer(data = user)              
+            if serializer_salesperson.is_valid():
+                # Then Create the userprofile and the salesperson       
+                serializer_salesperson.save()
 
         else:
             return Response({'response': 'error', 'message': serializer_user.errors})
