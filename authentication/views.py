@@ -81,3 +81,15 @@ def CreateAdmin(request):
 
         return Response({"response": "Admin Created"}, status=201)
         
+@api_view(('POST', ))
+def UpdateUser(request):
+    user = User.objects.get(username= request.data['username'])
+    if request.data['type'] == 'email':
+        if request.data['email']:
+            user.email = request.data['email']
+
+    if request.data['type'] == 'password':
+        if request.data['password']:
+            user.set_password(request.data['password'])
+    user.save()
+    return Response({"response": "User Updated"}, status=203)
