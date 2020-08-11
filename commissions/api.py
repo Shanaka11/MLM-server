@@ -17,9 +17,9 @@ class SalespersonApi(viewsets.ModelViewSet):
     def create(self, request):
         # When Creating Salesperson create a user as well if password is not given set a default password
         user = User.objects.create(
-            username=request.data["name"],
+            username=request.data["username"],
             first_name= request.data["name"],
-            # email=request.data["email"]
+            email=request.data["email"]
         )
         user.set_password("MiguelIsGood")
         user.save()
