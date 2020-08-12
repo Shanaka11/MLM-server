@@ -12,8 +12,9 @@ class SalespersonApi(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk):
         response = super().retrieve(request, pk)
-        sponser = Salesperson.objects.get(id=response.data["sponser"])
-        response.data["sponser"] = SalespersonSeralizer(sponser).data
+        if response.data["sponser"]:
+            sponser = Salesperson.objects.get(id=response.data["sponser"])
+            response.data["sponser"] = SalespersonSeralizer(sponser).data
         return response
 
     def create(self, request):
@@ -48,7 +49,7 @@ class SalesApi(viewsets.ModelViewSet):
         salesperson.total_individual_commission += response.data["commission_perc"]
         salesperson.save()
         # Then update commission for all related salesperson
-        UpdateDirectCommission(salesperson)
+        UpdateDirectCommission(salesperson, 0)
         return response
 
     def update(self, request, pk):
@@ -61,7 +62,7 @@ class SalesApi(viewsets.ModelViewSet):
             salesperson.total_individual_commission += (response.data["commission_perc"] - oldsale.commission_perc)
             salesperson.save()
             # Update Connected Salesperson Group Commission
-            UpdateDirectCommission(salesperson)
+            UpdateDirectCommission(salesperson, 0)
         else:
             oldsalesperson = Salesperson.objects.get(id= oldsale.salesperson.id)
             oldsalesperson.total_individual_sales -=  oldsale.total
@@ -72,8 +73,8 @@ class SalesApi(viewsets.ModelViewSet):
             salesperson.total_individual_sales += response.data["total"]
             salesperson.total_individual_commission += response.data["commission_perc"]
             salesperson.save()
-            UpdateDirectCommission(oldsalesperson)
-            UpdateDirectCommission(salesperson)
+            UpdateDirectCommission(oldsalesperson, 0)
+            UpdateDirectCommission(salesperson, 0)
             # Update both the old an new salesperson Group Commission
         return response
 
@@ -83,27 +84,34 @@ class SalesApi(viewsets.ModelViewSet):
         salesperson.total_individual_sales -= oldsale.total
         salesperson.total_individual_commission -= oldsale.commission_perc
         salesperson.save()
-        # UpdateDirectCommission(salesperson)
+        UpdateDirectCommission(salesperson, 0)
         response = super().destroy(request, pk)
         return response
 
 # Method to calculate all related commissions when a salesperson is given
-def UpdateDirectCommission(salesperson):
-    direct_commission = salesperson.total_individual_sales
+def UpdateDirectCommission(salesperson, leval):
+    salesperson.total_direct_commission = salesperson.total_individual_commission
     if salesperson.total_individual_sales > 0 :        
         salespersons = Salesperson.objects.filter(sponser=salesperson)
         total = salespersons.aggregate(Sum('total_individual_commission'))
         if total['total_individual_commission__sum'] is not None:
-            salesperson.total_individual_commission += (total['total_individual_commission__sum'] * 0.1)
+            salesperson.total_direct_commission += (total['total_individual_commission__sum'] * 0.1)
     else:
         salespersons = Salesperson.objects.filter(sponser=salesperson)
         total = salespersons.aggregate(Sum('total_individual_commission'))
         if total['total_individual_commission__sum'] is not None:
-            salesperson.total_individual_commission += (total['total_individual_commission__sum'] * 0.05)
+            salesperson.total_direct_commission += (total['total_individual_commission__sum'] * 0.05)
 
     salesperson.save()
 
-    if salesperson.sponser is not None:
-        return UpdateDirectCommission(salesperson.sponser)
+    if salesperson.sponser is not None or leval < 1:
+        return UpdateDirectCommission(salesperson.sponser, leval + 1)
     else:
         return
+
+# def UpdateGroupCommissions(salesperson):
+#     # Calculate total commission of the sponsered salesperson
+#     if salesperson.sponser is not None:
+#         return UpdateDirectCommission(salesperson.sponser, leval + 1)
+#     else:
+#         return
