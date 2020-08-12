@@ -50,6 +50,8 @@ class SalesApi(viewsets.ModelViewSet):
         salesperson.save()
         # Then update commission for all related salesperson
         UpdateDirectCommission(salesperson, 0)
+        UpdateGroupCommissions(salesperson)
+        UpdateGroupCommissionsBasic(salesperson, response.data["total"])
         return response
 
     def update(self, request, pk):
@@ -63,6 +65,8 @@ class SalesApi(viewsets.ModelViewSet):
             salesperson.save()
             # Update Connected Salesperson Group Commission
             UpdateDirectCommission(salesperson, 0)
+            UpdateGroupCommissions(salesperson)
+            UpdateGroupCommissionsBasic(salesperson, response.data["total"] - oldsale.total)
         else:
             oldsalesperson = Salesperson.objects.get(id= oldsale.salesperson.id)
             oldsalesperson.total_individual_sales -=  oldsale.total
@@ -76,6 +80,8 @@ class SalesApi(viewsets.ModelViewSet):
             UpdateDirectCommission(oldsalesperson, 0)
             UpdateDirectCommission(salesperson, 0)
             # Update both the old an new salesperson Group Commission
+            # Handle this separatly when getting the total Group Sales
+            # Possibly do a recalc for the oldsalesperson
         return response
 
     def destroy(self, request, pk):
@@ -85,33 +91,62 @@ class SalesApi(viewsets.ModelViewSet):
         salesperson.total_individual_commission -= oldsale.commission_perc
         salesperson.save()
         UpdateDirectCommission(salesperson, 0)
+        UpdateGroupCommissionsBasic(salesperson, -oldsale.total )
         response = super().destroy(request, pk)
         return response
 
 # Method to calculate all related commissions when a salesperson is given
 def UpdateDirectCommission(salesperson, leval):
-    salesperson.total_direct_commission = salesperson.total_individual_commission
-    if salesperson.total_individual_sales > 0 :        
-        salespersons = Salesperson.objects.filter(sponser=salesperson)
-        total = salespersons.aggregate(Sum('total_individual_commission'))
-        if total['total_individual_commission__sum'] is not None:
-            salesperson.total_direct_commission += (total['total_individual_commission__sum'] * 0.1)
-    else:
-        salespersons = Salesperson.objects.filter(sponser=salesperson)
-        total = salespersons.aggregate(Sum('total_individual_commission'))
-        if total['total_individual_commission__sum'] is not None:
-            salesperson.total_direct_commission += (total['total_individual_commission__sum'] * 0.05)
+    if salesperson:
+        salesperson.total_direct_commission = salesperson.total_individual_commission
+        if salesperson.total_individual_sales > 0 :        
+            salespersons = Salesperson.objects.filter(sponser=salesperson)
+            total = salespersons.aggregate(Sum('total_individual_commission'))
+            if total['total_individual_commission__sum'] is not None:
+                salesperson.total_direct_commission += (total['total_individual_commission__sum'] * 0.1)
+        else:
+            salespersons = Salesperson.objects.filter(sponser=salesperson)
+            total = salespersons.aggregate(Sum('total_individual_commission'))
+            if total['total_individual_commission__sum'] is not None:
+                salesperson.total_direct_commission += (total['total_individual_commission__sum'] * 0.05)
 
+        salesperson.save()
+
+        if salesperson.sponser is not None or leval < 1:
+            return UpdateDirectCommission(salesperson.sponser, leval + 1)
+        else:
+            return
+
+def UpdateGroupCommissions(salesperson):
+    # Refererance
+    #  1% 25,000
+    #  2% 60,000
+    #  3% 130,000
+    #  4% 290,000
+    #  5% 700,000
+
+    # Calculate total commission of the sponsered salesperson
+    group_commission = salesperson.total_individual_commission
+    group_commission += GetSponseredCommissions(salesperson, 0)
+    salesperson.total_group_commissions = group_commission
     salesperson.save()
 
-    if salesperson.sponser is not None or leval < 1:
-        return UpdateDirectCommission(salesperson.sponser, leval + 1)
+    if salesperson.sponser is not None:
+        return UpdateGroupCommissions(salesperson.sponser)
     else:
         return
 
-# def UpdateGroupCommissions(salesperson):
-#     # Calculate total commission of the sponsered salesperson
-#     if salesperson.sponser is not None:
-#         return UpdateDirectCommission(salesperson.sponser, leval + 1)
-#     else:
-#         return
+def GetSponseredCommissions(salesperson, total):
+    salespersons = Salesperson.objects.filter(sponser=salesperson)
+    temp_total = total
+    for person in salespersons:
+        temp_total += GetSponseredCommissions(person, total + person.total_individual_commission)
+    return temp_total
+
+def UpdateGroupCommissionsBasic(salesperson, sale):
+    salesperson.total_group_sales += sale
+    salesperson.save()
+    if salesperson.sponser is not None:
+        return UpdateGroupCommissionsBasic(salesperson.sponser, sale)
+    else:
+        return
