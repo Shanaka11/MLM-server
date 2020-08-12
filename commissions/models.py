@@ -13,12 +13,11 @@ class Salesperson(models.Model):
     realestate_id = models.IntegerField(blank=True, null=True)
     # What is qualification - commission percentage 
     qualification = models.FloatField(blank=True, null=True)
-    # Total commissions
-    # total_commission = models.FloatField(blank=True, null=True)
-    # Total group commissions
+    total_individual_sales = models.FloatField(blank=True, null=True, default=0)
+    total_individual_commission = models.FloatField(blank=True, null=True, default=0)
+    total_direct_commission = models.FloatField(blank=True, null=True, default=0)
     total_group_sales = models.FloatField(blank=True, null=True, default=0)
     total_group_commissions = models.FloatField(blank=True, null=True, default=0)
-    # Have seriaizer method fields to fetch these values commissions as well
 
 class Sales(models.Model):
     salesperson = models.ForeignKey(Salesperson, on_delete=models.CASCADE, blank=False, null=False)
