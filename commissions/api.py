@@ -41,7 +41,6 @@ class SalesApi(viewsets.ModelViewSet):
     # When updating and creating sales update the related salesperson as well
     def create(self, request):
         response = super().create(request)
-        print(response.data)
         salesperson = Salesperson.objects.get(id = response.data["salesperson"])
         salesperson.total_individual_sales += response.data["total"]
         salesperson.total_individual_commission += response.data["commission_perc"]
@@ -53,10 +52,23 @@ class SalesApi(viewsets.ModelViewSet):
         oldsale = Sales.objects.get(id= pk)
         response = super().update(request, pk)
         # Handle salesperson change
-        salesperson = Salesperson.objects.get(id = response.data["salesperson"])
-        salesperson.total_individual_sales += (response.data["total"] - oldsale.total)
-        salesperson.total_individual_commission += (response.data["commission_perc"] - oldsale.commission_perc)
-        salesperson.save()       
+        if oldsale.salesperson.id == response.data["salesperson"]:
+            salesperson = Salesperson.objects.get(id = response.data["salesperson"])
+            salesperson.total_individual_sales += (response.data["total"] - oldsale.total)
+            salesperson.total_individual_commission += (response.data["commission_perc"] - oldsale.commission_perc)
+            salesperson.save()
+            # Update Connected Salesperson Group Commission
+        else:
+            oldsalesperson = Salesperson.objects.get(id= oldsale.salesperson.id)
+            oldsalesperson.total_individual_sales -=  oldsale.total
+            oldsalesperson.total_individual_commission -= oldsale.commission_perc
+            oldsalesperson.save()
+
+            salesperson = Salesperson.objects.get(id = response.data["salesperson"])
+            salesperson.total_individual_sales += response.data["total"]
+            salesperson.total_individual_commission += response.data["commission_perc"]
+            salesperson.save()
+            # Update both the old an new salesperson Group Commission
         return response
 
     def destroy(self, request, pk):
