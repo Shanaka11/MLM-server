@@ -4,6 +4,8 @@ from .serializers import SalespersonSeralizer, SalesSerializer, SalespersonDetai
 from .models import Sales, Salesperson
 from authentication.serializers import  User, UserProfile, Role
 
+from django.db.models import Sum
+
 class SalespersonApi(viewsets.ModelViewSet):
     queryset = Salesperson.objects.all()
     serializer_class = SalespersonSeralizer    
@@ -46,6 +48,7 @@ class SalesApi(viewsets.ModelViewSet):
         salesperson.total_individual_commission += response.data["commission_perc"]
         salesperson.save()
         # Then update commission for all related salesperson
+        UpdateDirectCommission(salesperson)
         return response
 
     def update(self, request, pk):
@@ -58,6 +61,7 @@ class SalesApi(viewsets.ModelViewSet):
             salesperson.total_individual_commission += (response.data["commission_perc"] - oldsale.commission_perc)
             salesperson.save()
             # Update Connected Salesperson Group Commission
+            UpdateDirectCommission(salesperson)
         else:
             oldsalesperson = Salesperson.objects.get(id= oldsale.salesperson.id)
             oldsalesperson.total_individual_sales -=  oldsale.total
@@ -68,6 +72,8 @@ class SalesApi(viewsets.ModelViewSet):
             salesperson.total_individual_sales += response.data["total"]
             salesperson.total_individual_commission += response.data["commission_perc"]
             salesperson.save()
+            UpdateDirectCommission(oldsalesperson)
+            UpdateDirectCommission(salesperson)
             # Update both the old an new salesperson Group Commission
         return response
 
@@ -77,7 +83,27 @@ class SalesApi(viewsets.ModelViewSet):
         salesperson.total_individual_sales -= oldsale.total
         salesperson.total_individual_commission -= oldsale.commission_perc
         salesperson.save()
+        # UpdateDirectCommission(salesperson)
         response = super().destroy(request, pk)
         return response
 
 # Method to calculate all related commissions when a salesperson is given
+def UpdateDirectCommission(salesperson):
+    direct_commission = salesperson.total_individual_sales
+    if salesperson.total_individual_sales > 0 :        
+        salespersons = Salesperson.objects.filter(sponser=salesperson)
+        total = salespersons.aggregate(Sum('total_individual_commission'))
+        if total['total_individual_commission__sum'] is not None:
+            salesperson.total_individual_commission += (total['total_individual_commission__sum'] * 0.1)
+    else:
+        salespersons = Salesperson.objects.filter(sponser=salesperson)
+        total = salespersons.aggregate(Sum('total_individual_commission'))
+        if total['total_individual_commission__sum'] is not None:
+            salesperson.total_individual_commission += (total['total_individual_commission__sum'] * 0.05)
+
+    salesperson.save()
+
+    if salesperson.sponser is not None:
+        return UpdateDirectCommission(salesperson.sponser)
+    else:
+        return
