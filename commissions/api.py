@@ -117,22 +117,18 @@ def UpdateDirectCommission(salesperson, leval):
         else:
             return
 
-def UpdateGroupCommissions(salesperson):
+def UpdateGroupCommissions(salesperson, child_group_commission=None):
     # Refererance
-    #  1% 25,000
-    #  2% 60,000
-    #  3% 130,000
-    #  4% 290,000
-    #  5% 700,000
-
     # Calculate total commission of the sponsered salesperson
     group_commission = salesperson.total_individual_commission
     group_commission += GetSponseredCommissions(salesperson, 0)
-    salesperson.total_group_commissions = group_commission
+    salesperson.total_group_commissions = GetCommission(group_commission)
+    if child_group_commission:
+        salesperson.total_group_commissions -= child_group_commission
     salesperson.save()
 
     if salesperson.sponser is not None:
-        return UpdateGroupCommissions(salesperson.sponser)
+        return UpdateGroupCommissions(salesperson.sponser, salesperson.total_group_commissions)
     else:
         return
 
@@ -150,3 +146,20 @@ def UpdateGroupCommissionsBasic(salesperson, sale):
         return UpdateGroupCommissionsBasic(salesperson.sponser, sale)
     else:
         return
+
+def GetCommission(commission_amt):
+    #  1% 25,000
+    #  2% 60,000
+    #  3% 130,000
+    #  4% 290,000
+    #  5% 700,000
+    if commission_amt >= 700000:
+        return commission_amt * 0.05
+    elif commission_amt >= 290000:
+        return commission_amt * 0.04
+    elif commission_amt >= 130000:
+        return commission_amt * 0.03
+    elif commission_amt >= 60000:
+        return commission_amt * 0.02
+    elif commission_amt >= 25000:
+        return commission_amt * 0.01
