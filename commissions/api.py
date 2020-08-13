@@ -77,8 +77,13 @@ class SalesApi(viewsets.ModelViewSet):
             salesperson.total_individual_sales += response.data["total"]
             salesperson.total_individual_commission += response.data["commission_perc"]
             salesperson.save()
+
             UpdateDirectCommission(oldsalesperson, 0)
             UpdateDirectCommission(salesperson, 0)
+            UpdateGroupCommissions(oldsalesperson)
+            UpdateGroupCommissions(salesperson)
+            UpdateGroupCommissionsBasic(oldsalesperson, -oldsale.total)
+            UpdateGroupCommissionsBasic(salesperson, response.data["total"])
             # Update both the old an new salesperson Group Commission
             # Handle this separatly when getting the total Group Sales
             # Possibly do a recalc for the oldsalesperson
@@ -91,6 +96,7 @@ class SalesApi(viewsets.ModelViewSet):
         salesperson.total_individual_commission -= oldsale.commission_perc
         salesperson.save()
         UpdateDirectCommission(salesperson, 0)
+        UpdateGroupCommissions(salesperson)
         UpdateGroupCommissionsBasic(salesperson, -oldsale.total )
         response = super().destroy(request, pk)
         return response
@@ -122,7 +128,10 @@ def UpdateGroupCommissions(salesperson, child_group_commission=None):
     # Calculate total commission of the sponsered salesperson
     group_commission = salesperson.total_individual_commission
     group_commission += GetSponseredCommissions(salesperson, 0)
-    salesperson.total_group_commissions = GetCommission(group_commission)
+    temp_commission = GetCommission(group_commission)
+    salesperson.total_group_commissions = temp_commission["commission"]
+    salesperson.qualification = temp_commission["qualification"]
+    # update the qualification here as well
     if child_group_commission:
         salesperson.total_group_commissions -= child_group_commission
     salesperson.save()
@@ -154,12 +163,14 @@ def GetCommission(commission_amt):
     #  4% 290,000
     #  5% 700,000
     if commission_amt >= 700000:
-        return commission_amt * 0.05
+        return {"qualification": 5, "commission": commission_amt * 0.05}
     elif commission_amt >= 290000:
-        return commission_amt * 0.04
+        return {"qualification": 4, "commission": commission_amt * 0.04}
     elif commission_amt >= 130000:
-        return commission_amt * 0.03
+        return {"qualification": 3, "commission": commission_amt * 0.03}
     elif commission_amt >= 60000:
-        return commission_amt * 0.02
+        return {"qualification": 2, "commission": commission_amt * 0.02}
     elif commission_amt >= 25000:
-        return commission_amt * 0.01
+        return {"qualification": 1, "commission": commission_amt * 0.01}
+    else:
+        return {"qualification": 0, "commission": commission_amt * 0}
