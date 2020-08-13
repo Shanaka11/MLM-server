@@ -5,6 +5,7 @@ from .models import Sales, Salesperson
 from authentication.serializers import  User, UserProfile, Role
 
 from django.db.models import Sum
+from django.db import transaction
 
 class SalespersonApi(viewsets.ModelViewSet):
     queryset = Salesperson.objects.all()
@@ -17,6 +18,7 @@ class SalespersonApi(viewsets.ModelViewSet):
             response.data["sponser"] = SalespersonSeralizer(sponser).data
         return response
 
+    @transaction.atomic
     def create(self, request):
         # When Creating Salesperson create a user as well if password is not given set a default password
         user = User.objects.create(
@@ -42,6 +44,7 @@ class SalesApi(viewsets.ModelViewSet):
     serializer_class = SalesSerializer
 
     # When updating and creating sales update the related salesperson as well
+    @transaction.atomic
     def create(self, request):
         response = super().create(request)
         salesperson = Salesperson.objects.get(id = response.data["salesperson"])
@@ -54,6 +57,7 @@ class SalesApi(viewsets.ModelViewSet):
         UpdateGroupCommissionsBasic(salesperson, response.data["total"])
         return response
 
+    @transaction.atomic
     def update(self, request, pk):
         oldsale = Sales.objects.get(id= pk)
         response = super().update(request, pk)
@@ -89,6 +93,7 @@ class SalesApi(viewsets.ModelViewSet):
             # Possibly do a recalc for the oldsalesperson
         return response
 
+    @transaction.atomic
     def destroy(self, request, pk):
         oldsale = Sales.objects.get(id = pk)
         salesperson = Salesperson.objects.get(id= oldsale.salesperson.id)

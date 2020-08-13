@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.contrib.auth.models import User
+from django.db import transaction
 from .serializers import UserSerializer, UserProfileSerializer, PublicUserSerializer
 from rest_framework.decorators import api_view
 
@@ -12,7 +13,7 @@ from commissions.serializers import SalespersonSeralizer
 max_age = 365 * 24 * 60 * 60
 
 class TokenObtainPairViewNew(TokenObtainPairView):
-
+    @transaction.atomic
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
         refresh = response.data.pop('refresh')
@@ -22,6 +23,7 @@ class TokenObtainPairViewNew(TokenObtainPairView):
         return response
 
 class TokenRefreshViewNew(TokenRefreshView):
+    @transaction.atomic
     def post(self, request, *args, **kwargs):
         request.data['refresh'] = request.COOKIES['refresh']
         response = super().post(request, *args, **kwargs)
@@ -36,7 +38,7 @@ def getUser(request):
     return Response(data=serializer.data, status=200)
 
 class CreateUserView(APIView):
-
+    @transaction.atomic
     def post(self, request):
         user = request.data
         serializer_user = UserSerializer(data = user)
@@ -63,6 +65,7 @@ class CreateUserView(APIView):
     #     # return Response(serializer.errors, status=400)
 
 @api_view(('POST',))
+@transaction.atomic
 def CreateAdmin(request):
         user = User.objects.create(
             username=request.data['username'],
@@ -82,6 +85,7 @@ def CreateAdmin(request):
         return Response({"response": "Admin Created"}, status=201)
         
 @api_view(('POST', ))
+@transaction.atomic
 def UpdateUser(request):
     user = User.objects.get(username= request.data['username'])
     if request.data['type'] == 'email':

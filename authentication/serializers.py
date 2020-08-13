@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.db import transaction
 from django.contrib.auth.models import User
 from .models import Role, UserProfile
 # from commissions.serializers import SalespersonSeralizer, Salesperson
@@ -31,7 +32,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'password', 'first_name', 'email')
 
-    
+    @transaction.atomic
     def create(self, validated_data):
         user = User.objects.create(
             username=validated_data['username'],
