@@ -30,6 +30,9 @@ class SalespersonApi(viewsets.ModelViewSet):
         user.save()
         request.data['user'] = user.id
         # Create Salesperson
+        sponser_user = User.objects.get(username = request.data["sponser"])
+        request.data["sponser"] = sponser_user.salesperson.id
+        request.data["qualification"] = 0
         response = super().create(request)
         # Create user profile
         role = Role.objects.get(role = "CLIENT")
@@ -38,6 +41,7 @@ class SalespersonApi(viewsets.ModelViewSet):
             role = role,
             cell = request.data["cell"]
         )
+        response.data["sponser"] = sponser_user.salesperson.id
         return response
 
 class SalesApi(viewsets.ModelViewSet):
@@ -47,7 +51,12 @@ class SalesApi(viewsets.ModelViewSet):
     # When updating and creating sales update the related salesperson as well
     @transaction.atomic
     def create(self, request):
-        response = super().create(request)
+        # In our case salespersonID = salesperson username    
+        user = User.objects.get(username = request.data["salesperson"])
+        request.data["salesperson"] = user.salesperson.id
+
+        response = super().create(request)    
+
         salesperson = Salesperson.objects.get(id = response.data["salesperson"])
         salesperson.total_individual_sales += response.data["total"]
         salesperson.total_individual_commission += response.data["commission_perc"]
@@ -56,15 +65,23 @@ class SalesApi(viewsets.ModelViewSet):
         UpdateDirectCommission(salesperson, 0)
         UpdateGroupCommissions(salesperson)
         UpdateGroupCommissionsBasic(salesperson, response.data["total"])
+
+        response.data["salesperson"] = user.salesperson.id
+
         return response
 
     @transaction.atomic
     def update(self, request, pk):
         oldsale = Sales.objects.get(id= pk)
+        # In our case salespersonID = salesperson username            
+        user = User.objects.get(username = request.data["salesperson"])
+        request.data["salesperson"] = user.salesperson.id    
+            
         response = super().update(request, pk)
+
         # Handle salesperson change
-        if oldsale.salesperson.id == response.data["salesperson"]:
-            salesperson = Salesperson.objects.get(id = response.data["salesperson"])
+        if oldsale.salesperson.id == user.salesperson.id:
+            salesperson = Salesperson.objects.get(id = user.salesperson.id)
             salesperson.total_individual_sales += (response.data["total"] - oldsale.total)
             salesperson.total_individual_commission += (response.data["commission_perc"] - oldsale.commission_perc)
             salesperson.save()
@@ -78,7 +95,7 @@ class SalesApi(viewsets.ModelViewSet):
             oldsalesperson.total_individual_commission -= oldsale.commission_perc
             oldsalesperson.save()
 
-            salesperson = Salesperson.objects.get(id = response.data["salesperson"])
+            salesperson = Salesperson.objects.get(id = user.salesperson.id)
             salesperson.total_individual_sales += response.data["total"]
             salesperson.total_individual_commission += response.data["commission_perc"]
             salesperson.save()
@@ -92,11 +109,13 @@ class SalesApi(viewsets.ModelViewSet):
             # Update both the old an new salesperson Group Commission
             # Handle this separatly when getting the total Group Sales
             # Possibly do a recalc for the oldsalesperson
+        response.data["salesperson"] = user.salesperson.id
         return response
 
     @transaction.atomic
     def destroy(self, request, pk):
         oldsale = Sales.objects.get(id = pk)
+
         salesperson = Salesperson.objects.get(id= oldsale.salesperson.id)
         salesperson.total_individual_sales -= oldsale.total
         salesperson.total_individual_commission -= oldsale.commission_perc

@@ -7,12 +7,12 @@ class Salesperson(models.Model):
     # Add user as a one to one field
     user = models.OneToOneField(User, on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(max_length=100, blank=False, null=False)
-    address = models.CharField(max_length=200, blank=False, null=False)
+    address = models.CharField(max_length=200, blank=True, null=True)
     cell = models.CharField(max_length=20, blank=False, null=False)
     sponser = models.ForeignKey('Salesperson', blank=True, null=True, on_delete=models.CASCADE)
     realestate_id = models.IntegerField(blank=True, null=True)
     # What is qualification - commission percentage 
-    qualification = models.FloatField(blank=True, null=True)
+    qualification = models.FloatField(default=0, blank=True, null=True)
     total_individual_sales = models.FloatField(blank=True, null=True, default=0)
     total_individual_commission = models.FloatField(blank=True, null=True, default=0)
     total_direct_commission = models.FloatField(blank=True, null=True, default=0)
