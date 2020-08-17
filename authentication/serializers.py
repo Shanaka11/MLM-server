@@ -27,6 +27,7 @@ class UserSerializer(serializers.ModelSerializer):
     # Fetch Role from user profile as well
     # user_profile = UserProfileSerializer()
     # salesperson = SalespersonSeralizer()
+    # cell = serializers.CharField(write_only = True)
 
     class Meta:
         model = User
@@ -43,9 +44,13 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         # Create User Profile
         role = Role.objects.get(role ='CLIENT')
+        # print("before")
+        # print(validated_data)
+        # print("after")
         profile = UserProfile.objects.create(
             user = user,
-            role = role
+            role = role,
+            # cell = validated_data["cell"]
         )        
         profile.save()        
         # Create Salesperson if Client

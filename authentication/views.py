@@ -78,7 +78,8 @@ def CreateAdmin(request):
         role = Role.objects.get(role ='ADMIN')
         profile = UserProfile.objects.create(
             user = user,
-            role = role
+            role = role,
+            cell = request.data["cell"]
         )        
         profile.save()  
 

@@ -35,7 +35,8 @@ class SalespersonApi(viewsets.ModelViewSet):
         role = Role.objects.get(role = "CLIENT")
         user_profile = UserProfile.objects.create(
             user = user,
-            role = role
+            role = role,
+            cell = request.data["cell"]
         )
         return response
 
