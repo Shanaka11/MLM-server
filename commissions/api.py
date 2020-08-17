@@ -30,8 +30,11 @@ class SalespersonApi(viewsets.ModelViewSet):
         user.save()
         request.data['user'] = user.id
         # Create Salesperson
-        sponser_user = User.objects.get(username = request.data["sponser"])
-        request.data["sponser"] = sponser_user.salesperson.id
+        try:
+            sponser_user = User.objects.get(username = request.data["sponser"])
+            request.data["sponser"] = sponser_user.salesperson.id
+        except:
+            pass
         request.data["qualification"] = 0
         response = super().create(request)
         # Create user profile
@@ -41,7 +44,10 @@ class SalespersonApi(viewsets.ModelViewSet):
             role = role,
             cell = request.data["cell"]
         )
-        response.data["sponser"] = sponser_user.salesperson.id
+        try:
+            response.data["sponser"] = sponser_user.salesperson.id
+        except:
+            pass
         return response
 
 class SalesApi(viewsets.ModelViewSet):
