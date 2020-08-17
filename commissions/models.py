@@ -23,5 +23,7 @@ class Sales(models.Model):
     salesperson = models.ForeignKey(Salesperson, on_delete=models.CASCADE, blank=False, null=False)
     total = models.FloatField(blank=False, null=False)
     commission_perc = models.FloatField(blank=False, null=False)
+    # Invoice Number
+    sales_id = models.CharField(max_length=50, blank=False, null=False)
 
 # Methods to calculate commissions
