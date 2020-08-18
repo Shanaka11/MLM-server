@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.db import transaction
 from django.contrib.auth.models import User
-from .models import Role, UserProfile, Document
+from .models import Role, UserProfile, Document, Ads
 # from commissions.serializers import SalespersonSeralizer, Salesperson
 from rest_framework.response import Response
 
@@ -77,4 +77,10 @@ class DocumentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Document
+        fields = '__all__'
+
+class AdsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Ads
         fields = '__all__'

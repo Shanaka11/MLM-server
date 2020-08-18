@@ -12,3 +12,6 @@ class UserProfile(models.Model):
 
 class Document(models.Model):
     doc = models.FileField(upload_to="agreements", null=False, blank=False)
+
+class Ads(models.Model):
+    doc = models.ImageField(upload_to="ads", null=False, blank=False)

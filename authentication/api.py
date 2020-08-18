@@ -1,6 +1,6 @@
 from rest_framework import viewsets
-from .serializers import RoleSerializer, UserProfileSerializer, ReadUserProfileSerializer, DocumentSerializer
-from .models import Role, UserProfile, Document
+from .serializers import RoleSerializer, UserProfileSerializer, ReadUserProfileSerializer, DocumentSerializer, AdsSerializer
+from .models import Role, UserProfile, Document, Ads
 
 
 class RoleApi(viewsets.ModelViewSet):
@@ -29,3 +29,6 @@ class DocumentApi(viewsets.ModelViewSet):
         
         return super().create(request)
     
+class AdsApi(viewsets.ModelViewSet):
+    queryset = Ads.objects.all()
+    serializer_class = AdsSerializer
