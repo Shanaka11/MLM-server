@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.db import transaction
 from django.contrib.auth.models import User
-from .models import Role, UserProfile
+from .models import Role, UserProfile, Document
 # from commissions.serializers import SalespersonSeralizer, Salesperson
 from rest_framework.response import Response
 
@@ -72,3 +72,9 @@ class PublicUserSerializer(serializers.ModelSerializer):
             return obj.salesperson.id
         except:    
             return ""
+
+class DocumentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Document
+        fields = '__all__'
