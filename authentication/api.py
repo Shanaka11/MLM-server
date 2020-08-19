@@ -1,7 +1,8 @@
 from rest_framework import viewsets
 from .serializers import RoleSerializer, UserProfileSerializer, ReadUserProfileSerializer, DocumentSerializer, AdsSerializer
 from .models import Role, UserProfile, Document, Ads
-
+from django.contrib.auth import authenticate
+from rest_framework.response import Response
 
 class RoleApi(viewsets.ModelViewSet):
     queryset = Role.objects.all()
@@ -32,3 +33,12 @@ class DocumentApi(viewsets.ModelViewSet):
 class AdsApi(viewsets.ModelViewSet):
     queryset = Ads.objects.all()
     serializer_class = AdsSerializer
+
+    def create(self, request):
+        # Validate user and then proceed
+        print(request.data)
+        user = authenticate(request, username= request.data['username'], password= request.data['password'])
+        if user is not None:
+            return super().create(request)
+        else:
+            return Response({"message": "Invalid Credentials"}, status = 400)
