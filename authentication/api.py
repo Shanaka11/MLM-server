@@ -36,7 +36,6 @@ class AdsApi(viewsets.ModelViewSet):
 
     def create(self, request):
         # Validate user and then proceed
-        print(request.data)
         user = authenticate(request, username= request.data['username'], password= request.data['password'])
         if user is not None:
             return super().create(request)
