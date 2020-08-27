@@ -48,11 +48,15 @@ class CreateUserView(APIView):
             # IF CLIENT the fetch client Role object and assign it 
             # Assume its client for now
             user['user'] = serializer_user.data['id']
+            sponser_user = User.objects.get(username = request.data['sponser'])
+            user['sponser'] = sponser_user.salesperson.id
             serializer_salesperson = SalespersonSeralizer(data = user)              
             if serializer_salesperson.is_valid():
-                # Then Create the userprofile and the salesperson       
+                # Then Create the salesperson       
                 serializer_salesperson.save()
-
+            else:
+                print(serializer_salesperson.errors)
+                raise serializers.ValidationError(serializer_salesperson.errors)
         else:
             return Response({'response': 'error', 'message': serializer_user.errors})
         return Response({'response': 'success'}, status=201)

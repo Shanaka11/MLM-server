@@ -24,10 +24,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class UserSerializer(serializers.ModelSerializer):
-    # Fetch Role from user profile as well
-    # user_profile = UserProfileSerializer()
-    # salesperson = SalespersonSeralizer()
-    # cell = serializers.CharField(write_only = True)
 
     class Meta:
         model = User
@@ -35,6 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        print(validated_data)
         user = User.objects.create(
             username=validated_data['username'],
             first_name=validated_data['first_name'],
@@ -53,7 +50,6 @@ class UserSerializer(serializers.ModelSerializer):
             # cell = validated_data["cell"]
         )        
         profile.save()        
-        # Create Salesperson if Client
         return user        
 
 class PublicUserSerializer(serializers.ModelSerializer):
